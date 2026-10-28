@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TypeFlow — Typing Speed Trainer</title>
+<style>
+:root{--bg:#0b0d1a;--card:rgba(255,255,255,.04);--line:rgba(255,255,255,.08);--text:#e6e9f5;--muted:#7c83a6;--a:#7c5cff;--b:#22d3ee;--ok:#34d399;--bad:#f43f5e;}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow-x:hidden}
+.blob{position:fixed;width:520px;height:520px;border-radius:50%;filter:blur(90px);opacity:.3;z-index:-1;animation:float 18s ease-in-out infinite;will-change:transform;pointer-events:none}
+.b1{background:var(--a);top:-160px;left:-120px}
+.b2{background:var(--b);bottom:-200px;right:-120px;animation-delay:-6s}
+@keyframes float{50%{transform:translate(60px,40px) scale(1.1)}}
+.wrap{max-width:960px;margin:0 auto;padding:28px 20px 60px;display:flex;flex-direction:column;gap:26px}
+nav{display:flex;justify-content:space-between;align-items:center}
+.logo{font-weight:800;font-size:1.3rem;background:linear-gradient(90deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
+.best{color:var(--muted);font-size:.9rem}
+.hero{text-align:center;margin-top:8px}
+h1{font-size:clamp(2rem,5vw,3.2rem);letter-spacing:-.02em;line-height:1.1}
+h1 span{background:linear-gradient(90deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--muted);margin-top:10px}
+.modes{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--text);padding:10px 18px;border-radius:999px;transition:transform .15s,border-color .2s,background .2s}
+button:hover{transform:translateY(-2px);border-color:var(--a)}
+button.on{background:linear-gradient(90deg,var(--a),var(--b));border-color:transparent;color:#fff}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;text-align:center}
+.stat small{color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-size:.72rem}
+.stat b{display:block;font-size:2rem;margin-top:4px;font-variant-numeric:tabular-nums}
+.pop{animation:pop .25s ease}
+@keyframes pop{50%{transform:scale(1.12)}}
+.arena{position:relative;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:92px 34px 40px;backdrop-filter:blur(12px);box-shadow:0 20px 60px rgba(0,0,0,.4);overflow:hidden}
+.viewport{overflow:hidden}
+.text{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;font-size:clamp(1.05rem,2.2vw,1.4rem);line-height:2;word-break:break-word;user-select:none;transition:transform .2s ease-out;will-change:transform}
+.c{color:#4b5275;transition:color .08s}
+.c.ok{color:var(--ok);text-shadow:0 0 12px rgba(52,211,153,.35)}
+.c.bad{color:var(--bad);background:rgba(244,63,94,.15);border-radius:4px}
+.c.cur{color:#fff;background:linear-gradient(var(--a),var(--a)) no-repeat bottom/100% 2px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{background-color:transparent;background-image:none}}
+.shake{animation:shake .3s}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.hint{position:absolute;bottom:12px;right:20px;color:var(--muted);font-size:.8rem;transition:opacity .3s}
+.live{position:absolute;top:16px;right:22px;text-align:right}
+.live small{display:block;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-size:.7rem}
+.live b{display:block;font-size:2.4rem;line-height:1.1;background:linear-gradient(90deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent;font-variant-numeric:tabular-nums}
+.live span{color:var(--muted);font-size:.8rem}
+.bar{height:4px;background:var(--line);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--a),var(--b));transition:width .1s linear}
+.foot{display:flex;justify-content:center}
+.overlay{position:fixed;inset:0;background:rgba(5,6,15,.75);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;z-index:10}
+.overlay.show{display:flex;animation:fade .3s}
+@keyframes fade{from{opacity:0}}
+.modal{background:#121528;border:1px solid var(--line);border-radius:26px;padding:36px;max-width:460px;width:100%;text-align:center;animation:rise .4s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes rise{from{transform:translateY(30px) scale(.96);opacity:0}}
+.modal h2{font-size:1.6rem}
+.big{font-size:4.5rem;font-weight:800;background:linear-gradient(90deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent;margin:14px 0 4px;font-variant-numeric:tabular-nums}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:22px 0}
+.grid div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.grid small{color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.1em}
+.grid b{display:block;font-size:1.3rem;margin-top:4px;font-variant-numeric:tabular-nums}
+.newbest{color:var(--ok);font-weight:700;min-height:1.4em;margin-bottom:6px}
+.biglabel{color:var(--muted);text-transform:uppercase;letter-spacing:.14em;font-size:.75rem;margin-top:8px}
+@media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}.arena{padding:84px 22px 22px}.grid{grid-template-columns:1fr 1fr}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+
+<div class="wrap">
+  <nav>
+    <div class="logo">TypeFlow</div>
+    <div class="best">Personal best: <span id="bestTop">0</span> WPM</div>
+  </nav>
+
+  <section class="hero">
+    <h1>Type faster. <span>Type cleaner.</span></h1>
+    <p class="sub">Click anywhere or just start typing. Pick a duration below.</p>
+  </section>
+
+  <div class="modes" id="modes">
+    <button data-t="15">15s</button>
+    <button data-t="30" class="on">30s</button>
+    <button data-t="60">1 min</button>
+    <button data-t="120">2 min</button>
+    <button data-t="180">3 min</button>
+  </div>
+
+  <section class="stats">
+    <div class="stat"><small>WPM</small><b id="wpm">0</b></div>
+    <div class="stat"><small>Accuracy</small><b id="acc">100%</b></div>
+    <div class="stat"><small>Time left</small><b id="time">30</b></div>
+    <div class="stat"><small>Errors</small><b id="err">0</b></div>
+  </section>
+
+  <section class="arena" id="arena">
+    <div class="viewport" id="viewport">
+      <div class="text" id="text"></div>
+    </div>
+    <div class="live"><small>Live speed</small><b id="liveWpm">0</b><span>WPM</span></div>
+    <div class="hint" id="hint">Start typing to begin</div>
+  </section>
+
+  <div class="bar"><i id="prog"></i></div>
+
+  <div class="foot"><button id="restart">↻ New test (Tab)</button></div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2>Test complete 🎉</h2>
+    <div class="biglabel">Words per minute</div>
+    <div class="big" id="resWpm">0</div>
+    <div class="newbest" id="newBest"></div>
+    <div class="grid">
+      <div><small>Raw WPM</small><b id="resRaw">0</b></div>
+      <div><small>Accuracy</small><b id="resAcc">0%</b></div>
+      <div><small>Words typed</small><b id="resWords">0</b></div>
+      <div><small>Correct chars</small><b id="resCorrect">0</b></div>
+      <div><small>Errors</small><b id="resErr">0</b></div>
+      <div><small>Duration</small><b id="resDur">0:30</b></div>
+    </div>
+    <button class="on" id="again">Try again (Enter)</button>
+  </div>
+</div>
+
+<script>
+const WORDS = "the quick brown fox jumps over lazy dog and then runs into forest where light falls through tall trees while birds sing morning songs people build bridges across rivers learn new skills every day practice makes progress focus on rhythm not speed accuracy comes first hands rest lightly keys smooth steady flow ideas grow when mind is calm code design create explore imagine simple clear bright future world time moves forward so keep going great work starts small".split(" ");
+
+const $ = id => document.getElementById(id);
+const textEl = $("text"), viewport = $("viewport"), arena = $("arena"), overlay = $("overlay");
+
+let target = "", typed = "", dur = 30, left = 30, started = false, done = false;
+let start = 0, timer = null, best = 0, lastWpm = -1, lastCorrect = -1;
+
+try { best = +localStorage.getItem("typeflow_best") || 0; } catch (e) {}
+$("bestTop").textContent = best;
+
+function makeWords(n) {
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(WORDS[Math.floor(Math.random() * WORDS.length)]);
+  return out.join(" ");
+}
+
+function appendChars(str) {
+  const frag = document.createDocumentFragment();
+  for (const ch of str) {
+    const s = document.createElement("span");
+    s.className = "c";
+    s.textContent = ch;
+    frag.appendChild(s);
+  }
+  textEl.appendChild(frag);
+  target += str;
+}
+
+function build() {
+  target = ""; typed = "";
+  textEl.innerHTML = "";
+  textEl.style.transform = "translateY(0)";
+  appendChars(makeWords(80) + " ");
+  const lh = parseFloat(getComputedStyle(textEl).lineHeight);
+  viewport.style.height = (lh * 3) + "px";
+  render();
+}
+
+function correctCount() {
+  let c = 0;
+  for (let i = 0; i < typed.length; i++) if (typed[i] === target[i]) c++;
+  return c;
+}
+
+function render() {
+  const spans = textEl.children;
+  const correct = correctCount();
+  for (let i = 0; i < target.length; i++) {
+    let cls = "c";
+    if (i < typed.length) cls += typed[i] === target[i] ? " ok" : " bad";
+    else if (i === typed.length) cls += " cur";
+    if (spans[i] && spans[i].className !== cls) spans[i].className = cls;
+  }
+
+  // Keep the current character in a 3-line window
+  const cur = spans[typed.length];
+  if (cur) {
+    const lh = parseFloat(getComputedStyle(textEl).lineHeight);
+    const row = Math.round(cur.offsetTop / lh);
+    textEl.style.transform = `translateY(${-Math.max(0, row - 1) * lh}px)`;
+  }
+
+  const acc = typed.length ? Math.round((correct / typed.length) * 100) : 100;
+  setStat("acc", acc + "%");
+  setStat("err", typed.length - correct);
+  $("prog").style.width = (typed.length / Math.max(target.length, 1) * 100) + "%";
+
+  if (started) updateWpm();
+}
+
+function setStat(id, value) {
+  const el = $(id);
+  if (el.textContent !== String(value)) {
+    el.textContent = value;
+    el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop");
+  }
+}
+
+function currentWpm() {
+  const minutes = Math.max((performance.now() - start) / 60000, 3 / 60);
+  return Math.round((correctCount() / 5) / minutes);
+}
+
+function fmt(s) {
+  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+}
+
+function updateWpm() {
+  const w = currentWpm();
+  setStat("wpm", w);
+  setStat("liveWpm", w);
+}
+
+function shake() {
+  arena.classList.remove("shake"); void arena.offsetWidth; arena.classList.add("shake");
+}
+
+function startTest() {
+  started = true;
+  start = performance.now();
+  $("hint").style.opacity = 0;
+  timer = setInterval(tick, 100);
+}
+
+function tick() {
+  const elapsed = (performance.now() - start) / 1000;
+  left = Math.max(0, dur - elapsed);
+  setStat("time", fmt(Math.ceil(left)));
+  updateWpm();
+  if (left <= 0) finish();
+}
+
+function finish() {
+  clearInterval(timer);
+  started = false; done = true;
+  const wpm = currentWpm();
+  const correct = correctCount();
+  const acc = typed.length ? Math.round((correct / typed.length) * 100) : 0;
+  const isBest = wpm > best;
+  if (isBest) {
+    best = wpm;
+    try { localStorage.setItem("typeflow_best", best); } catch (e) {}
+    $("bestTop").textContent = best;
+  }
+  $("newBest").textContent = isBest && wpm > 0 ? "🚀 New personal best!" : "";
+  $("resAcc").textContent = acc + "%";
+  $("resCorrect").textContent = correct;
+  $("resErr").textContent = typed.length - correct;
+  const minutes = Math.max((performance.now() - start) / 60000, 3 / 60);
+  $("resRaw").textContent = Math.round((typed.length / 5) / minutes);
+  $("resWords").textContent = typed.trim().split(/\s+/).filter(Boolean).length;
+  $("resDur").textContent = fmt(dur);
+  overlay.classList.add("show");
+  countUp($("resWpm"), wpm);
+}
+
+function countUp(el, target) {
+  const t0 = performance.now(), dur = 800;
+  (function step(now) {
+    const p = Math.min((now - t0) / dur, 1);
+    el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+    if (p < 1) requestAnimationFrame(step);
+  })(t0);
+}
+
+function reset() {
+  clearInterval(timer);
+  started = false; done = false;
+  left = dur;
+  overlay.classList.remove("show");
+  $("hint").style.opacity = 1;
+  $("wpm").textContent = "0";
+  $("liveWpm").textContent = "0";
+  $("time").textContent = fmt(dur);
+  build();
+  setStat("acc", "100%");
+  setStat("err", 0);
+}
+
+window.addEventListener("keydown", e => {
+  if (e.key === "Tab") { e.preventDefault(); reset(); return; }
+  if (overlay.classList.contains("show")) {
+    if (e.key === "Enter") reset();
+    return;
+  }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+  if (e.key === "Backspace") {
+    e.preventDefault();
+    if (typed.length) typed = typed.slice(0, -1);
+  } else if (e.key.length === 1) {
+    e.preventDefault();
+    if (done) return;
+    if (!started) startTest();
+    if (typed.length < target.length) {
+      typed += e.key;
+      if (e.key !== target[typed.length - 1]) shake();
+    }
+    if (typed.length > target.length - 60) appendChars(makeWords(40) + " ");
+  } else {
+    return;
+  }
+  render();
+});
+
+document.querySelectorAll("#modes button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#modes button").forEach(b => b.classList.remove("on"));
+    btn.classList.add("on");
+    dur = +btn.dataset.t;
+    reset();
+  });
+});
+
+$("restart").addEventListener("click", reset);
+$("again").addEventListener("click", reset);
+
+reset();
+</script>
+</body>
+</html>
